@@ -229,22 +229,13 @@ public:
         return array_.Get() + size_;
     }
 
-    void PushBack(const Type& item) 
+    void PushBack(const Type& item)
     {
-        if (size_ < capacity_) 
+        if (size_ == capacity_)
         {
-            array_[size_] = item;
+            Reserve(capacity_ > 0 ? capacity_ * 2 : 1);
         }
-        else 
-        {
-            auto new_capacity = std::max(size_t(1), 2 * capacity_);
-            ArrayPtr<Type> arr_ptr(new_capacity);
-            std::copy(&array_[0], &array_[size_], &arr_ptr[0]);
-            arr_ptr[size_] = item;
-            array_.swap(arr_ptr);
-            capacity_ = new_capacity;
-        }
-        ++size_;
+        array_[size_] = item;
     }
 
     void PushBack(Type&& item) 
