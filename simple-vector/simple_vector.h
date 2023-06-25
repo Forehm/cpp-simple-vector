@@ -1,4 +1,5 @@
 #pragma once
+
 #include <stdexcept>
 #include <initializer_list>
 #include <algorithm>
@@ -26,13 +27,13 @@ private:
 
 
 
-ReserveProxyObj Reserve(size_t capacity_to_reserve) 
+ReserveProxyObj Reserve(size_t capacity_to_reserve)
 {
     return ReserveProxyObj(capacity_to_reserve);
 }
 
 template <typename Type>
-class SimpleVector 
+class SimpleVector
 {
 public:
     using Iterator = Type*;
@@ -40,7 +41,7 @@ public:
 
     SimpleVector() noexcept = default;
 
-    SimpleVector(ReserveProxyObj obj) 
+    SimpleVector(ReserveProxyObj obj)
     {
         SimpleVector<Type> vec;
         vec.Reserve(obj.GetCapacity());
@@ -52,17 +53,17 @@ public:
     {
     }
 
-    SimpleVector(size_t size, const Type& value): array_(size), size_(size), capacity_(size)
+    SimpleVector(size_t size, const Type& value) : array_(size), size_(size), capacity_(size)
     {
         std::fill(array_.Get(), array_.Get() + size_, value);
     }
 
-    SimpleVector(std::initializer_list<Type> other): array_(other.size()), size_(other.size()), capacity_(other.size())
+    SimpleVector(std::initializer_list<Type> other) : array_(other.size()), size_(other.size()), capacity_(other.size())
     {
         std::copy(other.begin(), other.end(), begin());
     }
 
-    SimpleVector(const SimpleVector& other) : array_(other.GetSize()) 
+    SimpleVector(const SimpleVector& other) : array_(other.GetSize())
     {
         std::copy(other.begin(), other.end(), begin());
         this->size_ = other.size_;
@@ -76,11 +77,11 @@ public:
         capacity_ = std::exchange(other.capacity_, 0);
     }
 
-    SimpleVector& operator=(const SimpleVector& rhs) 
+    SimpleVector& operator=(const SimpleVector& rhs)
     {
-        if (this != &rhs) 
+        if (this != &rhs)
         {
-            if (rhs.IsEmpty()) 
+            if (rhs.IsEmpty())
             {
                 Clear();
                 return *this;
@@ -93,50 +94,39 @@ public:
         return *this;
     }
 
-    SimpleVector& operator=(SimpleVector&& rhs) 
+    SimpleVector& operator=(SimpleVector&& rhs)
     {
-        if (this != &rhs) 
+        if (this != &rhs)
         {
-            if (rhs.IsEmpty()) 
+            if (rhs.IsEmpty())
             {
                 Clear();
                 return *this;
             }
             SimpleVector<Type> arr_ptr(rhs.size_);
-            std::copy(rhs.begin(), rhs.end(), arr_ptr.begin());
+            std::move(rhs.begin(), rhs.end(), arr_ptr.begin());
             arr_ptr.capacity_ = rhs.capacity_;
             swap(arr_ptr);
         }
         return *this;
     }
 
-    void Reserve(size_t capacity_to_reserve) 
-    {
-        if (capacity_to_reserve > capacity_) 
-        {
-            SimpleVector<Type> tmp_items(capacity_to_reserve);
-            std::copy(cbegin(), cend(), tmp_items.begin());
-            tmp_items.size_ = size_;
-            swap(tmp_items);
-        }
-    }
-
-    size_t GetSize() const noexcept 
+    size_t GetSize() const noexcept
     {
         return size_;
     }
 
-    size_t GetCapacity() const noexcept 
+    size_t GetCapacity() const noexcept
     {
         return capacity_;
     }
 
-    bool IsEmpty() const noexcept 
+    bool IsEmpty() const noexcept
     {
         return size_ == 0;
     }
 
-    Type& operator[](size_t index) noexcept 
+    Type& operator[](size_t index) noexcept
     {
         assert(index <= capacity_);
         return array_[index];
@@ -148,83 +138,79 @@ public:
         return array_[index];
     }
 
-    Type& At(size_t index) 
+    Type& At(size_t index)
     {
-        if (index >= size_) 
-        {
-            throw std::out_of_range("invalid index");
-        }
-        return array_[index];
-    }
-    
-    const Type& At(size_t index) const 
-    {
-        if (index >= size_) 
+        if (index >= size_)
         {
             throw std::out_of_range("invalid index");
         }
         return array_[index];
     }
 
-    void Clear() noexcept 
+    const Type& At(size_t index) const
+    {
+        if (index >= size_)
+        {
+            throw std::out_of_range("invalid index");
+        }
+        return array_[index];
+    }
+
+    void Clear() noexcept
     {
         size_ = 0;
     }
 
-    void Resize(size_t new_size) 
+    void Resize(size_t new_size)
     {
         if (new_size == size_) { return; }
 
-        if (new_size < size_) 
+        if (new_size < size_)
         {
-            for (auto it = &array_[new_size]; it != &array_[size_]; ++it) 
+            for (auto it = &array_[new_size]; it != &array_[size_]; ++it)
             {
                 *(it) = std::move(Type{});
             }
         }
 
-        if (new_size > capacity_) 
+        if (new_size > capacity_)
         {
-            auto new_capacity = std::max(new_size, 2 * capacity_);
-            ArrayPtr<Type> arr_ptr(new_capacity);
-            std::move(&array_[0], &array_[size_], &arr_ptr[0]);
-            for (auto it = &arr_ptr[size_]; it != &arr_ptr[new_size]; ++it) 
+            ReserveNoCopy(std::max(new_size, 2 * capacity_));
+            for (auto it = &array_[size_]; it != &array_[new_size]; ++it)
             {
                 *(it) = std::move(Type{});
             }
-            array_.swap(arr_ptr);
-            capacity_ = new_capacity;
         }
 
         size_ = new_size;
     }
 
-    Iterator begin() noexcept 
+    Iterator begin() noexcept
     {
         return array_.Get();
     }
 
-    Iterator end() noexcept 
+    Iterator end() noexcept
     {
         return array_.Get() + size_;
     }
 
-    ConstIterator begin() const noexcept 
+    ConstIterator begin() const noexcept
     {
         return array_.Get();
     }
 
-    ConstIterator end() const noexcept 
+    ConstIterator end() const noexcept
     {
         return array_.Get() + size_;
     }
 
-    ConstIterator cbegin() const noexcept 
+    ConstIterator cbegin() const noexcept
     {
         return array_.Get();
     }
 
-    ConstIterator cend() const noexcept 
+    ConstIterator cend() const noexcept
     {
         return array_.Get() + size_;
     }
@@ -238,25 +224,21 @@ public:
         array_[size_] = item;
     }
 
-    void PushBack(Type&& item) 
+    void PushBack(Type&& item)
     {
-        if (size_ < capacity_) 
+        if (size_ < capacity_)
         {
             array_[size_] = std::move(item);
         }
-        else 
+        else
         {
-            auto new_capacity = std::max(size_t(1), 2 * capacity_); 
-            ArrayPtr<Type> arr_ptr(new_capacity);
-            std::move(&array_[0], &array_[size_], &arr_ptr[0]);
-            arr_ptr[size_] = std::move(item);
-            array_.swap(arr_ptr);
-            capacity_ = new_capacity;
+            ReserveNoCopy(capacity_ > 0 ? capacity_ * 2 : 1);
+            array_[size_] = std::move(item);
         }
         ++size_;
     }
 
-    Iterator Insert(ConstIterator pos, const Type& value) 
+    Iterator Insert(ConstIterator pos, const Type& value)
     {
         assert(pos >= cbegin() && pos <= cend());
 
@@ -267,9 +249,9 @@ public:
             std::copy_backward(pos, cend(), &array_[(size_ + 1)]);
             array_[pos_element] = value;
         }
-        else 
+        else
         {
-            auto new_capacity = std::max(size_t(1), 2 * capacity_); 
+            auto new_capacity = std::max(size_t(1), 2 * capacity_);
             ArrayPtr<Type> arr_ptr(new_capacity);
             std::copy(&array_[0], &array_[pos_element], &arr_ptr[0]);
             std::copy_backward(pos, cend(), &arr_ptr[(size_ + 1)]);
@@ -282,34 +264,50 @@ public:
         return Iterator{ &array_[pos_element] };
     }
 
-    Iterator Insert(ConstIterator pos, Type&& value) 
+    void Reserve(size_t capacity_to_reserve)
+    {
+        if (capacity_to_reserve > capacity_)
+        {
+            SimpleVector<Type> tmp_items(capacity_to_reserve);
+            std::copy(cbegin(), cend(), tmp_items.begin());
+            tmp_items.size_ = size_;
+            swap(tmp_items);
+        }
+    }
+
+    Iterator Insert(ConstIterator pos, Type&& value)
     {
         assert(pos >= cbegin() && pos <= cend());
-
         auto no_const_pos = const_cast<Iterator>(pos);
         auto pos_element = std::distance(begin(), no_const_pos);
-
-        if (size_ < capacity_) 
+        if (size_ < capacity_)
         {
             std::move_backward(no_const_pos, end(), &array_[(size_ + 1)]);
             array_[pos_element] = std::move(value);
         }
-        else 
+        else
         {
-            auto new_capacity = std::max(size_t(1), 2 * capacity_); 
-            ArrayPtr<Type> arr_ptr(new_capacity);
-            std::move(&array_[0], &array_[pos_element], &arr_ptr[0]);
-            std::move_backward(no_const_pos, end(), &arr_ptr[(size_ + 1)]);
-            arr_ptr[pos_element] = std::move(value);
-            array_.swap(arr_ptr);
-            capacity_ = new_capacity;
+            ReserveNoCopy(std::max(size_t(1), 2 * capacity_), no_const_pos);
+            array_[pos_element] = std::move(value);
         }
-
         ++size_;
         return Iterator{ &array_[pos_element] };
     }
 
-    void PopBack() noexcept 
+    void ReserveNoCopy(size_t capacity_to_reserve, Iterator it = nullptr)
+    {
+        if (capacity_to_reserve < capacity_) { return; }
+        ArrayPtr<Type> arr_ptr(capacity_to_reserve);
+        std::move(&array_[0], &array_[size_], &arr_ptr[0]);
+        if (it)
+        {
+            std::move_backward(it, end(), &arr_ptr[(size_ + 1)]);
+        }
+        array_.swap(arr_ptr);
+        capacity_ = capacity_to_reserve;
+    }
+
+    void PopBack() noexcept
     {
         assert(!IsEmpty());
         --size_;
@@ -325,7 +323,7 @@ public:
         return &array_[pos_element];
     }
 
-    void swap(SimpleVector& other) noexcept 
+    void swap(SimpleVector& other) noexcept
     {
         array_.swap(other.array_);
         std::swap(size_, other.size_);
@@ -341,7 +339,7 @@ private:
 };
 
 template <typename Type>
-inline bool operator==(const SimpleVector<Type>& lhs, const SimpleVector<Type>& rhs) 
+inline bool operator==(const SimpleVector<Type>& lhs, const SimpleVector<Type>& rhs)
 {
     if (lhs.GetSize() != rhs.GetSize()) return false;
     return std::equal(lhs.begin(), lhs.end(), rhs.begin());
@@ -354,7 +352,7 @@ inline bool operator!=(const SimpleVector<Type>& lhs, const SimpleVector<Type>& 
 }
 
 template <typename Type>
-inline bool operator<(const SimpleVector<Type>& lhs, const SimpleVector<Type>& rhs) 
+inline bool operator<(const SimpleVector<Type>& lhs, const SimpleVector<Type>& rhs)
 {
     return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
 }
@@ -366,13 +364,13 @@ inline bool operator<=(const SimpleVector<Type>& lhs, const SimpleVector<Type>& 
 }
 
 template <typename Type>
-inline bool operator>(const SimpleVector<Type>& lhs, const SimpleVector<Type>& rhs) 
+inline bool operator>(const SimpleVector<Type>& lhs, const SimpleVector<Type>& rhs)
 {
     return rhs < lhs;
 }
 
 template <typename Type>
-inline bool operator>=(const SimpleVector<Type>& lhs, const SimpleVector<Type>& rhs) 
+inline bool operator>=(const SimpleVector<Type>& lhs, const SimpleVector<Type>& rhs)
 {
     return !(rhs > lhs);
 }
