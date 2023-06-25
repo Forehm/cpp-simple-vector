@@ -128,13 +128,13 @@ public:
 
     Type& operator[](size_t index) noexcept
     {
-        assert(index <= capacity_);
+        assert(index < capacity_);
         return array_[index];
     }
 
     const Type& operator[](size_t index) const noexcept
     {
-        assert(index <= capacity_);
+        assert(index < capacity_);
         return array_[index];
     }
 
