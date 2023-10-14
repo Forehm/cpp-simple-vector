@@ -46,22 +46,18 @@ public:
         return adres_raw_ptr_;
     }
 
-    // Возвращает ссылку на элемент массива с индексом index
     Type& operator[](size_t index) noexcept {
         return raw_ptr_[index];
     }
 
-    // Возвращает константную ссылку на элемент массива с индексом index
     const Type& operator[](size_t index) const noexcept {
         return raw_ptr_[index];
     }
 
-    // Возвращает true, если указатель ненулевой, и false в противном случае
     explicit operator bool() const {
         return raw_ptr_ != nullptr;
     }
 
-    // Возвращает значение сырого указателя, хранящего адрес начала массива
     Type* Get() const noexcept {
         return raw_ptr_;
     }
