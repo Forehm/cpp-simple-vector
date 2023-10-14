@@ -14,7 +14,6 @@ public:
         }
     }
 
-    // Конструктор из сырого указателя, хранящего адрес массива в куче либо nullptr
     explicit ArrayPtr(Type* raw_ptr) noexcept {
         raw_ptr_ = raw_ptr;
     }
@@ -33,18 +32,14 @@ public:
         return *this;
     }
 
-    // Запрещаем копирование
     ArrayPtr(const ArrayPtr&) = delete;
 
     ~ArrayPtr() {
         delete[] raw_ptr_;
     }
 
-    // Запрещаем присваивание
     ArrayPtr& operator=(const ArrayPtr&) = delete;
 
-    // Прекращает владением массивом в памяти, возвращает значение адреса массива
-    // После вызова метода указатель на массив должен обнулиться
     [[nodiscard]] Type* Release() noexcept {
         auto adres_raw_ptr_ = raw_ptr_;
         raw_ptr_ = nullptr;
