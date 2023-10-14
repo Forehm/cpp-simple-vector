@@ -62,7 +62,6 @@ public:
         return raw_ptr_;
     }
 
-    // Обменивается значениям указателя на массив с объектом other
     void swap(ArrayPtr& other) noexcept {
         std::swap(raw_ptr_, other.raw_ptr_);
     }
