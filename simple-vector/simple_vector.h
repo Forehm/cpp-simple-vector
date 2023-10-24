@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <iterator>
 #include <utility>
-
 #include "array_ptr.h"
 
 
